@@ -1,5 +1,5 @@
 let provider, signer, contract;
-const contractAddress = "0x4955edd64cead2a375d249351092f04bcae2b916";
+const contractAddress = "0x197efd29337dc28670183fef3eb93c1e955c112e";
 const contractABI = [
 	{
 		"anonymous": false,
@@ -164,45 +164,100 @@ const contractABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "getCampaigns",
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			}
+		],
+		"name": "getCampaign",
 		"outputs": [
 			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "description",
-						"type": "string"
-					},
-					{
-						"internalType": "address payable",
-						"name": "owner",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "goal",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "totalDonated",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "withdrawn",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct Charity.Campaign[]",
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "goal",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalDonated",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "withdrawn",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCampaignCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
 				"name": "",
-				"type": "tuple[]"
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "_addr",
+				"type": "address"
+			}
+		],
+		"name": "getContribution",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			}
+		],
+		"name": "getContributors",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
 			}
 		],
 		"stateMutability": "view",
@@ -257,61 +312,91 @@ window.onload = async () => {
 	container.innerHTML = "⏳ Loading savings goals...";
   
 	try {
-	  const campaigns = await contract.getCampaigns();
-	  console.log("📦 Campaigns fetched:", campaigns);
+	  const campaignCount = await contract.getCampaignCount();
+	  console.log("📦 Campaign count:", campaignCount);
   
-	  if (campaigns.length === 0) {
+	  if (campaignCount === 0) {
 		container.innerHTML = "<p class='text-muted'>No savings goals found. Be the first to create one!</p>";
 		return;
 	  }
   
 	  const ethUsd = await getEthUsd();
 	  container.innerHTML = ""; // Clear previous content
+	  const address = await signer.getAddress();
   
-	  const address = await signer.getAddress(); // Current user address
+	  for (let i = 0; i < campaignCount; i++) {
+		const [name, description, owner, goal, totalDonated, withdrawn] = await contract.getCampaign(i);
+
+		if (withdrawn) continue; //  Skip rendering withdrawn goals
+
+		const goalBN = ethers.BigNumber.from(goal);
+		const raisedBN = ethers.BigNumber.from(totalDonated);
   
-	  campaigns.forEach((c, i) => {
-		const goalBN = ethers.BigNumber.from(c.goal);
-		const raisedBN = ethers.BigNumber.from(c.totalDonated);
-  
-		// ✅ Skip completed or withdrawn goals
-		if (c.withdrawn || raisedBN.gte(goalBN)) return;
-  
-		const goalETH = ethers.utils.formatEther(c.goal);
-		const raisedETH = ethers.utils.formatEther(c.totalDonated);
-  
+		const goalETH = ethers.utils.formatEther(goal);
+		const raisedETH = ethers.utils.formatEther(totalDonated);
 		const goalUSD = (parseFloat(goalETH) * ethUsd).toFixed(2);
 		const raisedUSD = (parseFloat(raisedETH) * ethUsd).toFixed(2);
 		const progressPercent = ((parseFloat(raisedETH) / parseFloat(goalETH)) * 100).toFixed(1);
+  
+		// 🔍 Contributors (optional)
+		const contributorAddresses = await contract.getContributors(i);
+		let contributorsHtml = "";
+		for (const addr of contributorAddresses) {
+		  const amount = await contract.getContribution(i, addr);
+		  const ethAmount = ethers.utils.formatEther(amount);
+		  contributorsHtml += `<li>${addr.slice(0, 6)}...${addr.slice(-4)} – ${ethAmount} ETH</li>`;
+		}
+  
+		// ✅ Determine button based on role + status
+		let actionButton = `
+		  <button class="btn btn-success w-100 mt-auto" onclick="donate(${i})">
+			<i class="bi bi-plus-circle"></i> Add to Savings
+		  </button>
+		`;
+  
+		if (
+		  address.toLowerCase() === owner.toLowerCase() &&
+		  raisedBN.gte(goalBN) &&
+		  !withdrawn
+		) {
+		  actionButton = `
+			<button class="btn btn-warning w-100 mt-auto" onclick="withdraw(${i})">
+			  <i class="bi bi-unlock"></i> Withdraw Funds
+			</button>
+		  `;
+		}
   
 		const card = document.createElement("div");
 		card.className = "col-md-4 mb-3";
   
 		card.innerHTML = `
-		  <div class="card h-100 shadow-sm">
-			<div class="card-body d-flex flex-column justify-content-between">
-			  <div>
-				<h5 class="card-title">${c.name}</h5>
-				<p class="card-text">${c.description}</p>
-				<p><strong>Target:</strong> ${goalETH} ETH (~$${goalUSD})</p>
-				<p><strong>Saved:</strong> ${raisedETH} ETH (~$${raisedUSD})</p>
-  
-				<div class="progress mb-3" style="height: 20px;">
-				  <div class="progress-bar bg-success" role="progressbar" style="width: ${progressPercent}%;">
-					${progressPercent}%
-				  </div>
-				</div>
-			  </div>
-  
-			  <button class="btn btn-success w-100 mt-auto" onclick="donate(${i})">
-				<i class="bi bi-plus-circle"></i> Add to Savings
-			  </button>
-			</div>
-		  </div>
-		`;
+ 		 <div class="card h-100 shadow-sm">
+   			 <div class="card-body d-flex flex-column justify-content-between">
+      			<div>
+        			<h5 class="card-title">${name} <span class="text-muted fs-6">(ID: ${i})</span></h5>
+					<p class="card-text">${description}</p>
+        			<p><strong>Target:</strong> ${goalETH} ETH (~$${goalUSD})</p>
+        			<p><strong>Saved:</strong> ${raisedETH} ETH (~$${raisedUSD})</p>
+
+       				 <div class="progress mb-3" style="height: 20px;">
+          				<div class="progress-bar bg-success" role="progressbar" style="width: ${progressPercent}%;">
+            				${progressPercent}%
+          			</div>
+        		</div>
+
+        		<div>
+         		 <strong>Contributors:</strong>
+          		 <ul class="small text-muted mb-2">${contributorsHtml}</ul>
+        	</div>
+      	  </div>
+
+      	  ${actionButton}
+    	</div>
+  	  </div>
+	`;
   
 		container.appendChild(card);
-	  });
+	  }
   
 	} catch (err) {
 	  console.error("⚠️ Error loading campaigns:", err);
@@ -319,19 +404,29 @@ window.onload = async () => {
 	}
   }
   
-  
-  
-
   async function getEthUsd() {
-    try {
-      const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-      const data = await res.json();
-      return data.ethereum.usd;
-    } catch (err) {
-      console.error("Failed to fetch ETH price:", err);
-      return 0;
-    }
+	try {
+	  const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+	  const data = await res.json();
+	  return data.ethereum.usd;
+	} catch (err) {
+	  console.error("Failed to fetch ETH price:", err);
+	  return 0; // fallback
+	}
   }
+
+  async function withdraw(id) {
+	try {
+	  const tx = await contract.withdrawFunds(id);
+	  await tx.wait();
+	  alert("✅ Funds withdrawn!");
+	  loadCampaigns(); // Refresh list
+	} catch (err) {
+	  console.error("❌ Withdraw failed:", err);
+	  alert("Withdrawal failed. See console.");
+	}
+  }
+  
 
 async function donate(id) {
   const ethAmount = prompt("Enter ETH amount to save:");
