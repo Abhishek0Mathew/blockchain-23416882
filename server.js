@@ -13,6 +13,8 @@ app.set("view engine", "html");
 // Main pages
 app.get("/", (req, res) => res.render("index"));    // Home
 app.get("/notes", (req, res) => res.render("notes")); // Notes
+app.get("/about", (req, res) => res.render("about"));
+
 
 // 404 fallback
 app.use((req, res) => res.status(404).send("Page not found"));

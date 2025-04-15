@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About – VaultETH</title>
+
+  <!-- Bootstrap & Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fbfd;
+    }
+
+    .navbar {
+      background: linear-gradient(to right, #0d6efd, #0a58ca);
+    }
+
+    .section-title {
+      border-left: 5px solid #0d6efd;
+      padding-left: 12px;
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    .content-box {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .tech-list li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body class="container py-5">
+
+  <!-- 🔗 Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4 rounded">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">VaultETH</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">🏠 Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/notes">📝 Notes</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/about">ℹ️ About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 📄 About Content -->
+  <div class="content-box">
+    <h2 class="section-title"><i class="bi bi-info-circle-fill"></i> About VaultETH</h2>
+    <p class="mt-3 fs-5">
+      <strong>VaultETH</strong> is a decentralized application (dApp) that empowers users to set, track, and manage ETH-based savings goals using blockchain technology.
+    </p>
+
+    <p>
+      Whether you're saving up for a laptop, a vacation, or building an emergency fund, VaultETH lets you create personalized goals, contribute funds, track your progress in real time, and even leave motivational notes.
+    </p>
+
+    <hr class="my-4"/>
+
+    <h4>🔧 Features</h4>
+    <ul class="tech-list">
+      <li>🎯 Create and track personalized ETH savings goals</li>
+      <li>💸 Contribute to your goals from your wallet</li>
+      <li>📈 View real-time progress with ETH → USD conversion</li>
+      <li>📝 Leave notes or journal entries per campaign</li>
+      <li>🎁 Mint Vault Tokens when goals are achieved</li>
+    </ul>
+
+    <h4 class="mt-4">💡 Tech Stack</h4>
+    <ul class="tech-list">
+      <li>📦 <strong>Solidity</strong> – Smart contracts (SavingsVault, VaultToken, Notes)</li>
+      <li>📘 <strong>Remix IDE</strong> – Contract development</li>
+      <li>🛠️ <strong>Ethers.js</strong> – Web3 integration</li>
+      <li>🧠 <strong>Express.js</strong> – Backend routing</li>
+      <li>🎨 <strong>Bootstrap</strong> – UI design and layout</li>
+      <li>🦊 <strong>MetaMask + Sepolia</strong> – Wallet and testnet</li>
+    </ul>
+
+
+    <p class="text-muted small">© 2025 VaultETH – All rights reserved</p>
+  </div>
+
+</body>
+</html>
